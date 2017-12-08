@@ -1,12 +1,16 @@
 import numpy as np
-from mean_average_precision.ap_accumulator import APAccumulator
-from mean_average_precision.bbox_utils import jaccard
+from ap_accumulator import APAccumulator
+from bbox_utils import jaccard
 import math
+import matplotlib
+matplotlib.use('Agg')
+
 import matplotlib.pyplot as plt
 
+plt.ioff()
 
 class DetectionMAP:
-    def __init__(self, n_class, pr_samples=11, overlap_threshold=0.5):
+    def __init__(self, n_class, pr_samples=11, overlap_threshold=0.5, plot_path="PR-curve.pdf"):
         """
         Running computation of average precision of n_class in a bounding box + classification task
         :param n_class:             quantity of class
@@ -15,6 +19,7 @@ class DetectionMAP:
         """
         self.n_class = n_class
         self.overlap_threshold = overlap_threshold
+        self.plot_path = plot_path
         self.pr_scale = np.linspace(0, 1, pr_samples)
         self.total_accumulators = []
         self.reset_accumulators()
@@ -126,7 +131,7 @@ class DetectionMAP:
         fig, axes = plt.subplots(nrows=grid, ncols=grid)
         mean_average_precision = []
         # TODO: data structure not optimal for this operation...
-        for i, ax in enumerate(axes.flat):
+        for i, ax in enumerate(fig.axes):
             if i > self.n_class - 1:
                 break
             precisions = []
@@ -147,4 +152,6 @@ class DetectionMAP:
             ax.set_title('cls {0:} : AUC={1:0.2f}'.format(i, average_precision))
         plt.suptitle("Mean average precision : {:0.2f}".format(sum(mean_average_precision)/len(mean_average_precision)))
         fig.tight_layout()
-        plt.show()
+        fig.set_size_inches(7.5, 7.5)
+        plt.savefig(self.plot_path)
+        #plt.show()
